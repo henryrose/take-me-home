@@ -1,0 +1,9 @@
+[project]
+name = "take-me-home"
+version = "0.1.0"
+description = "Travel planning heuristics and explanations for ferry journeys."
+readme = "README.md"
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
