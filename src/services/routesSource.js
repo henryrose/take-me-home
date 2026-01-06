@@ -2,13 +2,14 @@ const { getFerryRouteData } = require("./wsdotFerries");
 const { getDriveTimeMinutes } = require("./googleDirections");
 const { LOCATION_COORDS } = require("../config");
 
-async function buildRoutes({ departAt }) {
+async function buildRoutes({ departAt, direction }) {
   const departAtDate = departAt ? new Date(departAt) : new Date();
+  const normalizedDirection = normalizeDirection(direction);
   const routeKeys = ["edmonds-kingston", "seattle-bainbridge"];
 
   const withDriveTimes = await Promise.all(
     routeKeys.map(async (routeKey) => {
-      const driveSegments = getDriveSegments(routeKey);
+      const driveSegments = getDriveSegments(routeKey, normalizedDirection);
       const firstLegDriveTime = await getFirstLegDriveTime(driveSegments, departAtDate);
       const terminalArrivalAt = firstLegDriveTime !== null
         ? new Date(departAtDate.getTime() + firstLegDriveTime * 60000)
@@ -17,7 +18,8 @@ async function buildRoutes({ departAt }) {
       const route = await getFerryRouteData({
         routeKey,
         departAt: departAtDate,
-        terminalArrivalAt
+        terminalArrivalAt,
+        direction: normalizedDirection
       });
 
       if (!route) {
@@ -49,12 +51,23 @@ async function buildRoutes({ departAt }) {
   return withDriveTimes.filter(Boolean);
 }
 
-function getDriveSegments(routeId) {
+function normalizeDirection(direction) {
+  return direction === "west_east" ? "west_east" : "east_west";
+}
+
+function getDriveSegments(routeId, direction) {
   if (!LOCATION_COORDS.HOME || !LOCATION_COORDS.DESTINATION) {
     return null;
   }
 
   if (routeId === "edmonds-kingston") {
+    if (direction === "west_east") {
+      return [
+        { origin: LOCATION_COORDS.DESTINATION, destination: LOCATION_COORDS.EDMONDS_TERMINAL },
+        { origin: LOCATION_COORDS.KINGSTON_TERMINAL, destination: LOCATION_COORDS.HOME }
+      ];
+    }
+
     return [
       { origin: LOCATION_COORDS.HOME, destination: LOCATION_COORDS.EDMONDS_TERMINAL },
       { origin: LOCATION_COORDS.KINGSTON_TERMINAL, destination: LOCATION_COORDS.DESTINATION }
@@ -62,6 +75,13 @@ function getDriveSegments(routeId) {
   }
 
   if (routeId === "seattle-bainbridge") {
+    if (direction === "west_east") {
+      return [
+        { origin: LOCATION_COORDS.DESTINATION, destination: LOCATION_COORDS.SEATTLE_TERMINAL },
+        { origin: LOCATION_COORDS.BAINBRIDGE_TERMINAL, destination: LOCATION_COORDS.HOME }
+      ];
+    }
+
     return [
       { origin: LOCATION_COORDS.HOME, destination: LOCATION_COORDS.SEATTLE_TERMINAL },
       { origin: LOCATION_COORDS.BAINBRIDGE_TERMINAL, destination: LOCATION_COORDS.DESTINATION }

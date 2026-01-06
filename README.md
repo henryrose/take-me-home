@@ -11,7 +11,7 @@ npm run dev
 
 Endpoints:
 - `GET /v1/health`
-- `GET /v1/routes?depart_at=ISO8601`
+- `GET /v1/routes?depart_at=ISO8601&direction=east_west|west_east`
 
 Configuration via `.env` (see `.env.example`).
 

@@ -14,7 +14,14 @@ app.get("/v1/health", (req, res) => {
 app.get("/v1/routes", async (req, res) => {
   try {
     const departAt = req.query.depart_at || null;
-    const result = await getRankedRoutes({ departAt });
+    const direction = req.query.direction || "east_west";
+    if (!["east_west", "west_east"].includes(direction)) {
+      return res.status(400).json({
+        error: "invalid_direction",
+        message: "direction must be east_west or west_east"
+      });
+    }
+    const result = await getRankedRoutes({ departAt, direction });
     res.json(result);
   } catch (error) {
     res.status(500).json({

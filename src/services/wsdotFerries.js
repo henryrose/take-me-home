@@ -147,30 +147,39 @@ function getFerryRouteDefinition(routeKey) {
   return null;
 }
 
-async function getFerryRouteData({ routeKey, departAt, terminalArrivalAt }) {
+async function getFerryRouteData({ routeKey, departAt, terminalArrivalAt, direction }) {
   const definition = getFerryRouteDefinition(routeKey);
   if (!definition) {
     return null;
   }
 
+  const normalizedDirection = direction === "west_east" ? "west_east" : "east_west";
+  const routeDefinition = normalizedDirection === "west_east"
+    ? {
+      ...definition,
+      departingTerminalId: definition.arrivingTerminalId,
+      arrivingTerminalId: definition.departingTerminalId
+    }
+    : definition;
+
   if (!WSDOT_ACCESS_CODE) {
     return {
-      ...definition,
+      ...routeDefinition,
       data_status: "missing_access_code"
     };
   }
 
   const scheduleResponse = await fetchScheduleToday({
-    departingTerminalId: definition.departingTerminalId,
-    arrivingTerminalId: definition.arrivingTerminalId,
+    departingTerminalId: routeDefinition.departingTerminalId,
+    arrivingTerminalId: routeDefinition.arrivingTerminalId,
     onlyRemainingTimes: true
   });
 
   const tripDate = formatTripDate(departAt || new Date());
   const routeDetailsResponse = await fetchRouteDetails({
     tripDate,
-    departingTerminalId: definition.departingTerminalId,
-    arrivingTerminalId: definition.arrivingTerminalId
+    departingTerminalId: routeDefinition.departingTerminalId,
+    arrivingTerminalId: routeDefinition.arrivingTerminalId
   });
 
   const routeDetails = Array.isArray(routeDetailsResponse)
@@ -197,7 +206,7 @@ async function getFerryRouteData({ routeKey, departAt, terminalArrivalAt }) {
   }
 
   return {
-    ...definition,
+    ...routeDefinition,
     ferry_wait_minutes: ferryWaitMinutes,
     ferry_crossing_minutes: ferryCrossingMinutes,
     schedule_count: sailings.length
