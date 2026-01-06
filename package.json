@@ -1,0 +1,16 @@
+{
+  "name": "take-me-home",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Targeted routing API for Olympic Peninsula to Seattle area",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-fetch": "^2.6.12"
+  }
+}
