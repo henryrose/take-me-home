@@ -49,15 +49,54 @@ function formatArrivalTime(isoString, totalMinutes) {
   return arrival.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
+function buildMapsLink(leg) {
+  if (!leg || !leg.origin || !leg.destination) {
+    return "";
+  }
+  const origin = `${leg.origin.lat},${leg.origin.lng}`;
+  const destination = `${leg.destination.lat},${leg.destination.lng}`;
+  const params = new URLSearchParams({
+    api: "1",
+    origin,
+    destination,
+    travelmode: "driving"
+  });
+  if (Array.isArray(leg.waypoints) && leg.waypoints.length > 0) {
+    const waypoints = leg.waypoints
+      .map((point) => `${point.lat},${point.lng}`)
+      .join("|");
+    params.set("waypoints", waypoints);
+  }
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
 function buildLegs(route) {
   const legs = [];
   const driveLegs = Array.isArray(route.drive_legs) ? route.drive_legs : [];
+  const isDriveOnly = route.route_mode === "drive";
+
+  if (isDriveOnly) {
+    driveLegs.forEach((leg) => {
+      legs.push({
+        type: "drive",
+        name: leg.name || "Drive leg",
+        minutes: leg.minutes,
+        origin: leg.origin,
+        destination: leg.destination,
+        waypoints: leg.waypoints
+      });
+    });
+    return legs;
+  }
 
   if (driveLegs[0]) {
     legs.push({
       type: "drive",
       name: driveLegs[0].name || "Drive leg",
-      minutes: driveLegs[0].minutes
+      minutes: driveLegs[0].minutes,
+      origin: driveLegs[0].origin,
+      destination: driveLegs[0].destination,
+      waypoints: driveLegs[0].waypoints
     });
   }
 
@@ -74,7 +113,10 @@ function buildLegs(route) {
     legs.push({
       type: "drive",
       name: driveLegs[1].name || "Drive leg",
-      minutes: driveLegs[1].minutes
+      minutes: driveLegs[1].minutes,
+      origin: driveLegs[1].origin,
+      destination: driveLegs[1].destination,
+      waypoints: driveLegs[1].waypoints
     });
   }
 
@@ -214,14 +256,14 @@ function App() {
           React.createElement(
             "div",
             { className: "route-header" },
+          React.createElement(
+            "div",
+            { className: "route-title" },
             React.createElement(
               "div",
-              { className: "route-title" },
-              React.createElement(
-                "div",
-                { className: "icon-bubble" },
-                "F"
-              ),
+              { className: "icon-bubble" },
+              route.route_mode === "drive" ? "D" : "F"
+            ),
               React.createElement(
                 "div",
                 null,
@@ -261,19 +303,34 @@ function App() {
                     { className: `leg-icon ${leg.type}` },
                     leg.type === "ferry" ? "F" : "D"
                   ),
-                  React.createElement(
-                    "div",
-                    null,
-                    React.createElement("div", { className: "leg-name" }, leg.name),
-                    leg.departure
-                      ? React.createElement(
+                React.createElement(
+                  "div",
+                  null,
+                  React.createElement("div", { className: "leg-name" }, leg.name),
+                  leg.departure
+                    ? React.createElement(
                         "div",
                         { className: "leg-meta" },
                         `Next departure: ${formatClockTime(leg.departure)}`
                       )
-                      : null
-                  )
-                ),
+                      : null,
+                  leg.type === "drive" && buildMapsLink(leg)
+                    ? React.createElement(
+                      "div",
+                      { className: "leg-meta" },
+                      React.createElement(
+                        "a",
+                        {
+                          href: buildMapsLink(leg),
+                          target: "_blank",
+                          rel: "noreferrer"
+                        },
+                        "View on Google Maps"
+                      )
+                    )
+                    : null
+                )
+              ),
                 React.createElement(
                   "div",
                   { className: "leg-time" },

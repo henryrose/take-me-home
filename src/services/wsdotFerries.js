@@ -154,7 +154,7 @@ async function getFerryRouteData({ routeKey, departAt, terminalArrivalAt, direct
   }
 
   const normalizedDirection = direction === "west_east" ? "west_east" : "east_west";
-  const routeDefinition = normalizedDirection === "west_east"
+  const routeDefinition = normalizedDirection === "east_west"
     ? {
       ...definition,
       departingTerminalId: definition.arrivingTerminalId,
