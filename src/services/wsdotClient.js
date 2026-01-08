@@ -13,9 +13,24 @@ function buildUrl(baseUrl, path, query) {
   return url.toString();
 }
 
+const { REQUEST_TIMEOUT_MS } = require("../config");
+
+async function fetchWithTimeout(url, options = {}) {
+  if (typeof AbortController === "undefined") {
+    return fetch(url, options);
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function fetchJson(baseUrl, path, query) {
   const url = buildUrl(baseUrl, path, query);
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       "User-Agent": "take-me-home/0.1"
     }

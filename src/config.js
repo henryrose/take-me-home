@@ -2,6 +2,15 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const CACHE_TTL_SECONDS = process.env.CACHE_TTL_SECONDS
   ? Number(process.env.CACHE_TTL_SECONDS)
   : 300;
+const RATE_LIMIT_WINDOW_MS = process.env.RATE_LIMIT_WINDOW_MS
+  ? Number(process.env.RATE_LIMIT_WINDOW_MS)
+  : 60_000;
+const RATE_LIMIT_MAX = process.env.RATE_LIMIT_MAX
+  ? Number(process.env.RATE_LIMIT_MAX)
+  : 60;
+const REQUEST_TIMEOUT_MS = process.env.REQUEST_TIMEOUT_MS
+  ? Number(process.env.REQUEST_TIMEOUT_MS)
+  : 8_000;
 const WSDOT_ACCESS_CODE = process.env.WSDOT_ACCESS_CODE || "";
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
 
@@ -49,6 +58,9 @@ const LOCATION_COORDS = {
 module.exports = {
   PORT,
   CACHE_TTL_SECONDS,
+  RATE_LIMIT_WINDOW_MS,
+  RATE_LIMIT_MAX,
+  REQUEST_TIMEOUT_MS,
   WSDOT_ACCESS_CODE,
   GOOGLE_MAPS_API_KEY,
   FERRY_TERMINAL_IDS,

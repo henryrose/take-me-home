@@ -1,5 +1,5 @@
 const fetch = require("node-fetch");
-const { GOOGLE_MAPS_API_KEY, CACHE_TTL_SECONDS } = require("../config");
+const { GOOGLE_MAPS_API_KEY, CACHE_TTL_SECONDS, REQUEST_TIMEOUT_MS } = require("../config");
 const { SimpleCache } = require("./simpleCache");
 
 const cache = new SimpleCache();
@@ -27,6 +27,19 @@ function formatAvoid(avoid) {
     return avoid.join("|");
   }
   return String(avoid);
+}
+
+async function fetchWithTimeout(url, options = {}) {
+  if (typeof AbortController === "undefined") {
+    return fetch(url, options);
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function getDriveTimeMinutes({ origin, destination, departAt, waypoints, avoid }) {
@@ -63,7 +76,7 @@ async function getDriveTimeMinutes({ origin, destination, departAt, waypoints, a
   }
 
   const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
-  const response = await fetch(url);
+  const response = await fetchWithTimeout(url);
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Google Directions failed (${response.status}): ${body}`);
