@@ -1,18 +1,21 @@
 const { useEffect, useMemo, useState } = React;
 
-function formatMinutes(value) {
+function formatMinutesShort(value) {
   if (value === null || value === undefined) {
     return "-";
   }
   if (value < 60) {
-    return `${value} min`;
+    return `${value}m`;
   }
   const hours = Math.floor(value / 60);
   const minutes = value % 60;
-  return minutes === 0 ? `${hours} hr` : `${hours} hr ${minutes} min`;
+  if (minutes === 0) {
+    return `${hours}h`;
+  }
+  return `${hours}h ${minutes}m`;
 }
 
-function formatDate(isoString) {
+function formatClockTime(isoString) {
   if (!isoString) {
     return "-";
   }
@@ -20,32 +23,66 @@ function formatDate(isoString) {
   if (Number.isNaN(date.getTime())) {
     return "-";
   }
-  return date.toLocaleString();
+  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-function formatDriveLegs(legs) {
-  if (!Array.isArray(legs) || legs.length === 0) {
+function formatUpdatedAt(isoString) {
+  if (!isoString) {
     return "-";
   }
-  return legs
-    .map((leg) => `${leg.name || "Leg"}: ${formatMinutes(leg.minutes)}`)
-    .join("\n");
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-function buildDepartAt(value) {
-  if (!value) {
-    return null;
+function formatArrivalTime(isoString, totalMinutes) {
+  if (!isoString || totalMinutes === null || totalMinutes === undefined) {
+    return "-";
   }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return null;
+  const base = new Date(isoString);
+  if (Number.isNaN(base.getTime())) {
+    return "-";
   }
-  return date.toISOString();
+  const arrival = new Date(base.getTime() + totalMinutes * 60000);
+  return arrival.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function buildLegs(route) {
+  const legs = [];
+  const driveLegs = Array.isArray(route.drive_legs) ? route.drive_legs : [];
+
+  if (driveLegs[0]) {
+    legs.push({
+      type: "drive",
+      name: driveLegs[0].name || "Drive leg",
+      minutes: driveLegs[0].minutes
+    });
+  }
+
+  if (route.name) {
+    legs.push({
+      type: "ferry",
+      name: route.name,
+      minutes: route.ferry_crossing_minutes,
+      departure: route.next_sailing_departure
+    });
+  }
+
+  if (driveLegs[1]) {
+    legs.push({
+      type: "drive",
+      name: driveLegs[1].name || "Drive leg",
+      minutes: driveLegs[1].minutes
+    });
+  }
+
+  return legs;
 }
 
 function App() {
   const [origin, setOrigin] = useState("port_townsend");
-  const [departAt, setDepartAt] = useState("");
   const [routes, setRoutes] = useState([]);
   const [generatedAt, setGeneratedAt] = useState(null);
   const [status, setStatus] = useState({ loading: false, error: "" });
@@ -60,11 +97,7 @@ function App() {
 
     async function loadRoutes() {
       setStatus({ loading: true, error: "" });
-      const departAtIso = buildDepartAt(departAt);
       const params = new URLSearchParams({ direction });
-      if (departAtIso) {
-        params.set("depart_at", departAtIso);
-      }
 
       try {
         const response = await fetch(`/v1/routes?${params.toString()}`);
@@ -91,77 +124,73 @@ function App() {
     return () => {
       isActive = false;
     };
-  }, [departAt, direction]);
+  }, [direction]);
+
+  const fastestRouteId = useMemo(() => {
+    if (!routes.length) {
+      return null;
+    }
+    const withEta = routes.filter((route) => route.total_eta_minutes !== null);
+    if (!withEta.length) {
+      return null;
+    }
+    withEta.sort((a, b) => a.total_eta_minutes - b.total_eta_minutes);
+    return withEta[0].id || withEta[0].name;
+  }, [routes]);
 
   return React.createElement(
     "div",
     { className: "app" },
-    React.createElement("h1", null, "Take Me Home"),
     React.createElement(
-      "p",
-      { className: "lede" },
-      "Pick where you are leaving from to see the next route options and timing estimates."
-    ),
-    React.createElement(
-      "form",
-      {
-        onSubmit: (event) => {
-          event.preventDefault();
-        }
-      },
+      "header",
+      { className: "header" },
       React.createElement(
-        "label",
-        null,
-        "Leaving from",
+        "div",
+        { className: "brand" },
         React.createElement(
-          "select",
-          {
-            value: origin,
-            onChange: (event) => setOrigin(event.target.value)
-          },
+          "span",
+          { className: "brand-icon", "aria-hidden": "true" },
           React.createElement(
-            "option",
-            { value: "port_townsend" },
-            "Port Townsend"
-          ),
-          React.createElement(
-            "option",
-            { value: "seattle" },
-            "Seattle"
+            "svg",
+            { viewBox: "0 0 20 20", role: "img", focusable: "false" },
+            React.createElement("path", {
+              d: "M2 10 L18 2 L12 18 L10 11 Z",
+              fill: "currentColor"
+            })
           )
-        )
+        ),
+        React.createElement("div", null, "Puget Sound Route Planner")
       ),
       React.createElement(
-        "label",
-        null,
-        "Depart at (optional)",
-        React.createElement("input", {
-          type: "datetime-local",
-          value: departAt,
-          onChange: (event) => setDepartAt(event.target.value)
-        })
-      ),
-      React.createElement(
-        "label",
-        null,
-        "Direction",
+        "div",
+        { className: "tabs" },
         React.createElement(
-          "input",
+          "button",
           {
-            type: "text",
-            value: direction === "east_west" ? "Port Townsend to Seattle" : "Seattle to Port Townsend",
-            readOnly: true
-          }
+            type: "button",
+            className: origin === "port_townsend" ? "tab active" : "tab",
+            onClick: () => setOrigin("port_townsend")
+          },
+          "Olympic Peninsula -> Seattle"
+        ),
+        React.createElement(
+          "button",
+          {
+            type: "button",
+            className: origin === "seattle" ? "tab active" : "tab",
+            onClick: () => setOrigin("seattle")
+          },
+          "Seattle -> Olympic Peninsula"
         )
+      ),
+      React.createElement(
+        "div",
+        { className: "meta" },
+        `Updated ${formatUpdatedAt(generatedAt)}`
       )
     ),
-    React.createElement(
-      "div",
-      { className: "meta" },
-      `Generated: ${formatDate(generatedAt)}`
-    ),
     status.loading
-      ? React.createElement("div", { className: "status" }, "Loading routes...")
+      ? React.createElement("div", { className: "status" }, "Updating routes...")
       : null,
     status.error
       ? React.createElement("div", { className: "status" }, `Error: ${status.error}`)
@@ -170,89 +199,103 @@ function App() {
       "div",
       { className: "routes" },
       routes.length === 0 && !status.loading && !status.error
-        ? React.createElement("div", null, "No route data yet.")
+        ? React.createElement("div", { className: "empty" }, "No route data yet.")
         : null,
       routes.map((route) =>
         React.createElement(
           "div",
-          { className: "route-card", key: route.id || route.name },
-          React.createElement("div", { className: "route-title" }, route.name || "Route"),
+          {
+            className:
+              (route.id || route.name) === fastestRouteId
+                ? "route-card fastest"
+                : "route-card",
+            key: route.id || route.name
+          },
           React.createElement(
             "div",
-            { className: "route-grid" },
+            { className: "route-header" },
             React.createElement(
               "div",
-              null,
-              "Total ETA",
-              React.createElement("span", null, formatMinutes(route.total_eta_minutes))
-            ),
-            React.createElement(
-              "div",
-              null,
-              "Drive time",
-              React.createElement("span", null, formatMinutes(route.drive_time_minutes))
-            ),
-            React.createElement(
-              "div",
-              null,
-              "Driving legs",
+              { className: "route-title" },
               React.createElement(
-                "span",
-                { style: { whiteSpace: "pre-line" } },
-                formatDriveLegs(route.drive_legs)
-              )
-            ),
-            React.createElement(
-              "div",
-              null,
-              "Ferry wait",
-              React.createElement("span", null, formatMinutes(route.ferry_wait_minutes))
-            ),
-            React.createElement(
-              "div",
-              null,
-              "Crossing time",
-              React.createElement("span", null, formatMinutes(route.ferry_crossing_minutes))
-            ),
-            React.createElement(
-              "div",
-              null,
-              "Next departure",
+                "div",
+                { className: "icon-bubble" },
+                "F"
+              ),
               React.createElement(
-                "span",
+                "div",
                 null,
-                formatDate(route.next_sailing_departure)
-              )
-            ),
-            React.createElement(
-              "div",
-              null,
-              "Schedule count",
-              React.createElement(
-                "span",
-                null,
-                route.schedule_count === undefined || route.schedule_count === null
-                  ? "-"
-                  : route.schedule_count
+                React.createElement("div", { className: "title-text" }, route.name || "Route"),
+                React.createElement(
+                  "div",
+                  { className: "eta-line" },
+                  React.createElement(
+                    "span",
+                    { className: "eta-time" },
+                    formatMinutesShort(route.total_eta_minutes)
+                  ),
+                  React.createElement(
+                    "span",
+                    { className: "eta-arrival" },
+                    `Arrive ~ ${formatArrivalTime(generatedAt, route.total_eta_minutes)}`
+                  ),
+                  (route.id || route.name) === fastestRouteId
+                    ? React.createElement("span", { className: "badge" }, "Fastest")
+                    : null
+                )
               )
             )
           ),
-          route.components && route.components.length
-            ? React.createElement(
-              "div",
-              { className: "note" },
-              `Includes: ${route.components.join(" + ")}`
-            )
-            : null,
-          route.data_status === "missing_access_code"
-            ? React.createElement(
-              "div",
-              { className: "note" },
-              "WSDOT access code missing. Ferry timing data is unavailable."
-            )
-            : null
+          React.createElement(
+            "div",
+            { className: "route-body" },
+            buildLegs(route).map((leg, index) =>
+              React.createElement(
+                "div",
+                { className: "leg", key: `${route.id || route.name}-leg-${index}` },
+                React.createElement(
+                  "div",
+                  { className: "leg-main" },
+                  React.createElement(
+                    "div",
+                    { className: `leg-icon ${leg.type}` },
+                    leg.type === "ferry" ? "F" : "D"
+                  ),
+                  React.createElement(
+                    "div",
+                    null,
+                    React.createElement("div", { className: "leg-name" }, leg.name),
+                    leg.departure
+                      ? React.createElement(
+                        "div",
+                        { className: "leg-meta" },
+                        `Next departure: ${formatClockTime(leg.departure)}`
+                      )
+                      : null
+                  )
+                ),
+                React.createElement(
+                  "div",
+                  { className: "leg-time" },
+                  formatMinutesShort(leg.minutes)
+                )
+              )
+            ),
+            route.data_status === "missing_access_code"
+              ? React.createElement(
+                "div",
+                { className: "route-note" },
+                "WSDOT access code missing. Ferry timing data is unavailable."
+              )
+              : null
+          )
         )
       )
+    ),
+    React.createElement(
+      "div",
+      { className: "footnote" },
+      "Note: Ferry departure times are estimated. Always verify current schedules with Washington State Ferries. Drive times are approximate and may vary with traffic."
     )
   );
 }

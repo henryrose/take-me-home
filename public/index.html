@@ -7,82 +7,82 @@
     <style>
       :root {
         color-scheme: light;
-        font-family: "Trebuchet MS", Verdana, sans-serif;
+        font-family: "Trebuchet MS", "Gill Sans", sans-serif;
       }
 
       body {
         margin: 0;
-        padding: 32px 20px 48px;
-        background: #f4f1ec;
-        color: #1d1c1a;
+        background: #f5f7fb;
+        color: #1f2933;
       }
 
       .app {
         max-width: 860px;
-        margin: 0 auto;
-        background: #fff7ee;
-        border: 2px solid #1d1c1a;
-        padding: 24px;
-        box-shadow: 8px 8px 0 #1d1c1a;
+        margin: 32px auto 40px;
+        padding: 0 20px 40px;
       }
 
-      h1 {
-        margin: 0 0 12px;
-        font-size: 32px;
-        letter-spacing: 0.5px;
+      .header {
+        margin-bottom: 20px;
       }
 
-      .lede {
-        margin: 0 0 24px;
-        font-size: 16px;
-      }
-
-      form {
-        display: grid;
-        gap: 12px;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        align-items: end;
-        margin-bottom: 24px;
-      }
-
-      label {
+      .brand {
         display: flex;
-        flex-direction: column;
-        gap: 6px;
-        font-size: 14px;
-        font-weight: 600;
+        align-items: center;
+        gap: 10px;
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 14px;
       }
 
-      select,
-      input,
-      button {
-        font-size: 15px;
-        padding: 10px 12px;
-        border: 2px solid #1d1c1a;
+      .brand-icon {
+        width: 20px;
+        height: 20px;
+        color: #2f5bea;
+        display: inline-flex;
+      }
+
+      .brand-icon svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .tabs {
+        display: inline-flex;
+        gap: 6px;
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid #d9e2ef;
         background: #fff;
       }
 
-      button {
+      .tab {
+        border: none;
+        background: transparent;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #556070;
         cursor: pointer;
-        background: #f6d16b;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
       }
 
-      button:disabled {
-        cursor: default;
-        opacity: 0.65;
+      .tab.active {
+        background: #2f5bea;
+        color: #fff;
+        box-shadow: 0 2px 6px rgba(47, 91, 234, 0.25);
       }
 
       .meta {
         font-size: 13px;
-        margin-bottom: 16px;
+        color: #6b7280;
+        margin-top: 10px;
       }
 
       .status {
         font-size: 14px;
         margin-bottom: 16px;
+        color: #4b5563;
       }
 
       .routes {
@@ -91,48 +91,165 @@
       }
 
       .route-card {
-        border: 2px solid #1d1c1a;
-        padding: 16px;
+        border-radius: 14px;
+        border: 1px solid #dfe7f2;
         background: #fff;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(14, 30, 54, 0.05);
+      }
+
+      .route-card.fastest {
+        border-color: #7ac485;
+        box-shadow: 0 0 0 2px rgba(122, 196, 133, 0.15),
+          0 10px 24px rgba(14, 30, 54, 0.06);
+      }
+
+      .route-header {
+        padding: 14px 16px;
+        background: #f7fbff;
+        border-bottom: 1px solid #e9eff8;
       }
 
       .route-title {
-        font-size: 18px;
-        font-weight: 700;
-        margin-bottom: 8px;
-      }
-
-      .route-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        gap: 8px 16px;
-        font-size: 14px;
-      }
-
-      .route-grid div {
         display: flex;
-        flex-direction: column;
-        gap: 4px;
+        align-items: center;
+        gap: 12px;
       }
 
-      .route-grid span {
+      .icon-bubble {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: #e9f1ff;
+        color: #2f5bea;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .title-text {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .eta-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #4b5563;
+      }
+
+      .eta-time {
+        font-weight: 700;
+        color: #1f2933;
+      }
+
+      .eta-arrival {
+        font-size: 13px;
+        color: #5f6c7b;
+      }
+
+      .badge {
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #5bb978;
+        color: #fff;
+        font-size: 12px;
         font-weight: 700;
       }
 
-      .note {
-        margin-top: 10px;
-        font-size: 12px;
-        font-style: italic;
+      .route-body {
+        padding: 12px 16px 16px;
+        display: grid;
+        gap: 12px;
       }
 
-      @media (max-width: 600px) {
-        body {
-          padding: 20px 14px 32px;
+      .leg {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        font-size: 14px;
+        color: #334155;
+      }
+
+      .leg-main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .leg-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 12px;
+      }
+
+      .leg-icon.drive {
+        background: #eef2f7;
+        color: #5b6472;
+      }
+
+      .leg-icon.ferry {
+        background: #e7f1ff;
+        color: #2f5bea;
+      }
+
+      .leg-name {
+        font-weight: 600;
+      }
+
+      .leg-meta {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 4px;
+      }
+
+      .leg-time {
+        font-weight: 700;
+        color: #1f2933;
+      }
+
+      .route-note {
+        font-size: 12px;
+        color: #64748b;
+        padding-top: 4px;
+      }
+
+      .empty {
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      .footnote {
+        margin-top: 18px;
+        padding: 12px 14px;
+        background: #edf4ff;
+        border-radius: 10px;
+        font-size: 12px;
+        color: #475569;
+      }
+
+      @media (max-width: 720px) {
+        .app {
+          margin: 24px auto 32px;
         }
 
-        .app {
-          padding: 18px;
-          box-shadow: 4px 4px 0 #1d1c1a;
+        .tabs {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        .leg {
+          align-items: flex-start;
         }
       }
     </style>
