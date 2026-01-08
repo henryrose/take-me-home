@@ -38,11 +38,13 @@ async function buildRoutes({ departAt, direction }) {
         : null;
 
       const totalEtaMinutes = calculateTotalEtaMinutes(route, driveTimeMinutes);
+      const driveLegs = buildDriveLegTimes(driveSegments, firstLegDriveTime, secondLegDriveTime);
 
       return {
         ...route,
         total_eta_minutes: totalEtaMinutes,
         drive_time_minutes: driveTimeMinutes,
+        drive_legs: driveLegs,
         alerts: []
       };
     })
@@ -63,28 +65,60 @@ function getDriveSegments(routeId, direction) {
   if (routeId === "edmonds-kingston") {
     if (direction === "west_east") {
       return [
-        { origin: LOCATION_COORDS.DESTINATION, destination: LOCATION_COORDS.EDMONDS_TERMINAL },
-        { origin: LOCATION_COORDS.KINGSTON_TERMINAL, destination: LOCATION_COORDS.HOME }
+        {
+          name: "Destination to Edmonds terminal",
+          origin: LOCATION_COORDS.DESTINATION,
+          destination: LOCATION_COORDS.EDMONDS_TERMINAL
+        },
+        {
+          name: "Kingston terminal to Home",
+          origin: LOCATION_COORDS.KINGSTON_TERMINAL,
+          destination: LOCATION_COORDS.HOME
+        }
       ];
     }
 
     return [
-      { origin: LOCATION_COORDS.HOME, destination: LOCATION_COORDS.EDMONDS_TERMINAL },
-      { origin: LOCATION_COORDS.KINGSTON_TERMINAL, destination: LOCATION_COORDS.DESTINATION }
+      {
+        name: "Home to Edmonds terminal",
+        origin: LOCATION_COORDS.HOME,
+        destination: LOCATION_COORDS.EDMONDS_TERMINAL
+      },
+      {
+        name: "Kingston terminal to Destination",
+        origin: LOCATION_COORDS.KINGSTON_TERMINAL,
+        destination: LOCATION_COORDS.DESTINATION
+      }
     ];
   }
 
   if (routeId === "seattle-bainbridge") {
     if (direction === "west_east") {
       return [
-        { origin: LOCATION_COORDS.DESTINATION, destination: LOCATION_COORDS.SEATTLE_TERMINAL },
-        { origin: LOCATION_COORDS.BAINBRIDGE_TERMINAL, destination: LOCATION_COORDS.HOME }
+        {
+          name: "Destination to Seattle terminal",
+          origin: LOCATION_COORDS.DESTINATION,
+          destination: LOCATION_COORDS.SEATTLE_TERMINAL
+        },
+        {
+          name: "Bainbridge terminal to Home",
+          origin: LOCATION_COORDS.BAINBRIDGE_TERMINAL,
+          destination: LOCATION_COORDS.HOME
+        }
       ];
     }
 
     return [
-      { origin: LOCATION_COORDS.HOME, destination: LOCATION_COORDS.SEATTLE_TERMINAL },
-      { origin: LOCATION_COORDS.BAINBRIDGE_TERMINAL, destination: LOCATION_COORDS.DESTINATION }
+      {
+        name: "Home to Seattle terminal",
+        origin: LOCATION_COORDS.HOME,
+        destination: LOCATION_COORDS.SEATTLE_TERMINAL
+      },
+      {
+        name: "Bainbridge terminal to Destination",
+        origin: LOCATION_COORDS.BAINBRIDGE_TERMINAL,
+        destination: LOCATION_COORDS.DESTINATION
+      }
     ];
   }
 
@@ -137,6 +171,20 @@ function calculateTotalEtaMinutes(route, driveTimeMinutes) {
   }
 
   return driveTimeMinutes + route.ferry_wait_minutes + route.ferry_crossing_minutes;
+}
+
+function buildDriveLegTimes(segments, firstLegDriveTime, secondLegDriveTime) {
+  if (!segments) {
+    return [];
+  }
+
+  return segments.map((segment, index) => {
+    const minutes = index === 0 ? firstLegDriveTime : secondLegDriveTime;
+    return {
+      name: segment.name || `Leg ${index + 1}`,
+      minutes: minutes === undefined ? null : minutes
+    };
+  });
 }
 
 module.exports = {

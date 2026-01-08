@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Take Me Home</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Trebuchet MS", Verdana, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px 20px 48px;
+        background: #f4f1ec;
+        color: #1d1c1a;
+      }
+
+      .app {
+        max-width: 860px;
+        margin: 0 auto;
+        background: #fff7ee;
+        border: 2px solid #1d1c1a;
+        padding: 24px;
+        box-shadow: 8px 8px 0 #1d1c1a;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 32px;
+        letter-spacing: 0.5px;
+      }
+
+      .lede {
+        margin: 0 0 24px;
+        font-size: 16px;
+      }
+
+      form {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        align-items: end;
+        margin-bottom: 24px;
+      }
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      select,
+      input,
+      button {
+        font-size: 15px;
+        padding: 10px 12px;
+        border: 2px solid #1d1c1a;
+        background: #fff;
+      }
+
+      button {
+        cursor: pointer;
+        background: #f6d16b;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      button:disabled {
+        cursor: default;
+        opacity: 0.65;
+      }
+
+      .meta {
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+
+      .status {
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+
+      .routes {
+        display: grid;
+        gap: 16px;
+      }
+
+      .route-card {
+        border: 2px solid #1d1c1a;
+        padding: 16px;
+        background: #fff;
+      }
+
+      .route-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .route-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 8px 16px;
+        font-size: 14px;
+      }
+
+      .route-grid div {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .route-grid span {
+        font-weight: 700;
+      }
+
+      .note {
+        margin-top: 10px;
+        font-size: 12px;
+        font-style: italic;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: 20px 14px 32px;
+        }
+
+        .app {
+          padding: 18px;
+          box-shadow: 4px 4px 0 #1d1c1a;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="/ui.js"></script>
+  </body>
+</html>

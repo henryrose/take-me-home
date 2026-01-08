@@ -196,6 +196,8 @@ async function getFerryRouteData({ routeKey, departAt, terminalArrivalAt, direct
 
   let ferryWaitMinutes = null;
   let ferryCrossingMinutes = crossingTimeFromRoute;
+  let nextSailingDeparture = null;
+  let nextSailingArrival = null;
 
   if (nextSailing) {
     const wait = diffMinutes(referenceTime, nextSailing.departingAt);
@@ -203,12 +205,20 @@ async function getFerryRouteData({ routeKey, departAt, terminalArrivalAt, direct
     if (!ferryCrossingMinutes && nextSailing.arrivingAt) {
       ferryCrossingMinutes = diffMinutes(nextSailing.departingAt, nextSailing.arrivingAt);
     }
+    nextSailingDeparture = nextSailing.departingAt
+      ? nextSailing.departingAt.toISOString()
+      : null;
+    nextSailingArrival = nextSailing.arrivingAt
+      ? nextSailing.arrivingAt.toISOString()
+      : null;
   }
 
   return {
     ...routeDefinition,
     ferry_wait_minutes: ferryWaitMinutes,
     ferry_crossing_minutes: ferryCrossingMinutes,
+    next_sailing_departure: nextSailingDeparture,
+    next_sailing_arrival: nextSailingArrival,
     schedule_count: sailings.length
   };
 }
